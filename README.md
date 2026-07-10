@@ -66,8 +66,12 @@ VECTOR_CONFIG_PATH=/path/to/vector.yaml npm run dev
 
 ```sh
 npm run build                   # tsc (server) + vite build (web)
-docker build -t vector-dashboard:0.1.0 .
+task build-docker               # or: docker build -t vector-dashboard .
 ```
+
+Releases are cut with `task release VERSION=x.y.z`, which bumps the package
+versions, tags `vx.y.z`, and pushes; a GitHub Actions workflow then builds and
+publishes `ghcr.io/waza-ari/vector-dashboard:<version>` (and `:latest`).
 
 See `k8s-sidecar-example.yaml` for wiring it into the Vector Helm chart
 (`customConfig.api.enabled`, `extraContainers`, shared config volume).
@@ -79,3 +83,7 @@ See `k8s-sidecar-example.yaml` for wiring it into the Vector Helm chart
 - `GET /api/stats` — per-component cumulative counters (poll and diff for rates)
 - `GET /api/config/:componentId` — redacted component config
 - `GET /healthz` — sidecar's own liveness (always 200, independent of Vector)
+
+## License
+
+[MIT](LICENSE)
