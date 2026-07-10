@@ -47,5 +47,6 @@ tasks:
       - npm version {{.VERSION}} --no-git-tag-version --allow-same-version --workspaces --include-workspace-root
       - git add package.json package-lock.json server/package.json web/package.json
       - git commit -m "Release v{{.VERSION}}"
-      - git tag v{{.VERSION}}
+      # annotated: `git push --follow-tags` only pushes annotated tags
+      - git tag -a v{{.VERSION}} -m "Release v{{.VERSION}}"
       - git push --follow-tags
