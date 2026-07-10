@@ -1,0 +1,49 @@
+version: '3'
+
+vars:
+  IMAGE: vector-dashboard
+  # Image tag for local builds: last release tag, or short hash before the first release
+  TAG:
+    sh: git describe --tags --always --dirty 2>/dev/null || echo dev
+  # Vector config used for local runs; override with VECTOR_CONFIG=...
+  VECTOR_CONFIG: '{{.VECTOR_CONFIG | default "../../ArgoProjects/logging-v2/vector-local.yaml"}}'
+
+tasks:
+  dev:
+    desc: Run server + web dev servers against the locally running Vector (start it with `task run-vector` in logging-v2)
+    interactive: true
+    cmds:
+      - VECTOR_CONFIG_PATH={{.VECTOR_CONFIG}} npm run dev
+
+  build-docker:
+    desc: Build the container image, tagged with the current git describe and :latest
+    cmds:
+      - docker build -t {{.IMAGE}}:{{.TAG}} -t {{.IMAGE}}:latest .
+
+  run-docker:
+    desc: Run the image on :8080 against the locally running Vector
+    deps: [build-docker]
+    interactive: true
+    cmds:
+      - >-
+        docker run --rm -p 8080:8080
+        -e VECTOR_GRPC_ADDR=host.docker.internal:8686
+        -e VECTOR_CONFIG_PATH=/etc/vector/vector.yaml
+        -v {{.VECTOR_CONFIG}}:/etc/vector/vector.yaml:ro
+        {{.IMAGE}}:latest
+
+  release:
+    desc: 'Release a new version: bump package versions, commit, tag vX.Y.Z, push (task release VERSION=0.2.0)'
+    preconditions:
+      - sh: echo "{{.VERSION}}" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'
+        msg: 'VERSION is required and must be semver, e.g.: task release VERSION=0.2.0'
+      - sh: git diff --quiet && git diff --cached --quiet
+        msg: working tree must be clean before releasing
+      - sh: '! git rev-parse "v{{.VERSION}}" >/dev/null 2>&1'
+        msg: tag v{{.VERSION}} already exists
+    cmds:
+      - npm version {{.VERSION}} --no-git-tag-version --workspaces --include-workspace-root
+      - git add package.json package-lock.json server/package.json web/package.json
+      - git commit -m "Release v{{.VERSION}}"
+      - git tag v{{.VERSION}}
+      - git push --follow-tags
