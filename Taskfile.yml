@@ -44,7 +44,7 @@ tasks:
       - sh: '! git rev-parse "v{{.VERSION}}" >/dev/null 2>&1'
         msg: tag v{{.VERSION}} already exists
     cmds:
-      - npm version {{.VERSION}} --no-git-tag-version --workspaces --include-workspace-root
+      - npm version {{.VERSION}} --no-git-tag-version --allow-same-version --workspaces --include-workspace-root
       - git add package.json package-lock.json server/package.json web/package.json
       - git commit -m "Release v{{.VERSION}}"
       - git tag v{{.VERSION}}
