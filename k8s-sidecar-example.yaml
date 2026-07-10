@@ -21,7 +21,7 @@ customConfig:
 
 extraContainers:
   - name: dashboard
-    image: ghcr.io/waza-ari/vector-dashboard:0.1.0
+    image: ghcr.io/makerspace-darmstadt/vector-dashboard:0.1.0
     env:
       - name: VECTOR_GRPC_ADDR
         value: 127.0.0.1:8686

@@ -71,7 +71,7 @@ task build-docker               # or: docker build -t vector-dashboard .
 
 Releases are cut with `task release VERSION=x.y.z`, which bumps the package
 versions, tags `vx.y.z`, and pushes; a GitHub Actions workflow then builds and
-publishes `ghcr.io/waza-ari/vector-dashboard:<version>` (and `:latest`).
+publishes `ghcr.io/makerspace-darmstadt/vector-dashboard:<version>` (and `:latest`).
 
 See `k8s-sidecar-example.yaml` for wiring it into the Vector Helm chart
 (`customConfig.api.enabled`, `extraContainers`, shared config volume).
