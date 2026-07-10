@@ -13,7 +13,9 @@ tasks:
     desc: Run server + web dev servers against the locally running Vector (start it with `task run-vector` in logging-v2)
     interactive: true
     cmds:
-      - VECTOR_CONFIG_PATH={{.VECTOR_CONFIG}} npm run dev
+      # realpath: npm workspace scripts run with cwd=server/, so the path
+      # must be absolute before it crosses into the npm script
+      - VECTOR_CONFIG_PATH="$(realpath '{{.VECTOR_CONFIG}}')" npm run dev
 
   build-docker:
     desc: Build the container image, tagged with the current git describe and :latest
@@ -29,7 +31,7 @@ tasks:
         docker run --rm -p 8080:8080
         -e VECTOR_GRPC_ADDR=host.docker.internal:8686
         -e VECTOR_CONFIG_PATH=/etc/vector/vector.yaml
-        -v {{.VECTOR_CONFIG}}:/etc/vector/vector.yaml:ro
+        -v "$(realpath '{{.VECTOR_CONFIG}}')":/etc/vector/vector.yaml:ro
         {{.IMAGE}}:latest
 
   release:
