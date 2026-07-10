@@ -1,0 +1,59 @@
+# Example: deploying the dashboard as a sidecar next to Vector using the
+# official Vector Helm chart (role: Aggregator). Merge these keys into your
+# chart values (e.g. logging-v2 values/vector.libsonnet).
+#
+# Notes:
+# - The Vector API must be enabled. 127.0.0.1 is sufficient: the sidecar
+#   shares the pod network namespace, and this avoids exposing the
+#   (unauthenticated) gRPC API outside the pod.
+# - The chart mounts the rendered config ConfigMap into the vector container
+#   at /etc/vector; mount the same volume into the sidecar so topology and
+#   per-component config can be derived. Verify the volume name ("config")
+#   and file name (customConfig renders to /etc/vector/vector.yaml) against
+#   your deployed StatefulSet: kubectl get sts vector -o yaml
+# - The dashboard has no authentication either; expose port 8080 only on
+#   your internal network / via an authenticated ingress.
+
+customConfig:
+  api:
+    enabled: true
+    address: 127.0.0.1:8686
+
+extraContainers:
+  - name: dashboard
+    image: <your-registry>/vector-dashboard:0.1.0
+    env:
+      - name: VECTOR_GRPC_ADDR
+        value: 127.0.0.1:8686
+      - name: VECTOR_CONFIG_PATH
+        value: /etc/vector/vector.yaml
+      - name: PORT
+        value: "8080"
+    ports:
+      - containerPort: 8080
+        name: dashboard
+    volumeMounts:
+      - name: config
+        mountPath: /etc/vector
+        readOnly: true
+    readinessProbe:
+      httpGet:
+        path: /healthz
+        port: 8080
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi
+      limits:
+        cpu: 200m
+        memory: 128Mi
+
+# Then expose port 8080 however fits your setup, e.g. add to the existing
+# Service ports list:
+#
+# service:
+#   ports:
+#     - name: dashboard
+#       port: 8080
+#       protocol: TCP
+#       targetPort: 8080
